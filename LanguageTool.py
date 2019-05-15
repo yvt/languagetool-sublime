@@ -239,6 +239,10 @@ class startLanguageToolServerCommand(sublime_plugin.TextCommand):
 
         cmd = ['java', '-cp', jar_path, 'org.languagetool.server.HTTPServer', '--port', '8081']
 
+        additional_args = get_settings().get('languagetool_args')
+        if additional_args:
+            cmd += additional_args
+
         if sublime.platform() == "windows":
             p = subprocess.Popen(
                 cmd,
