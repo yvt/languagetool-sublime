@@ -136,6 +136,8 @@ class clearLanguageProblemsCommand(sublime_plugin.TextCommand):
         problems = v.__dict__.get("problems", [])
         for p in problems:
             v.erase_regions(p['regionKey'])
+            if p['phantomKey'] is not None:
+                v.erase_phantoms(p['phantomKey'])
         problems = []
         recompute_highlights(v)
         caretPos = self.view.sel()[0].end()
@@ -340,6 +342,10 @@ def get_server_url(settings, force_server):
     return server
 
 
+def escape_html(text):
+    return text.replace('&', '&amp;').replace('<', '&lt;')
+
+
 class LanguageToolCommand(sublime_plugin.TextCommand):
     def run(self, edit, force_server=None):
 
@@ -389,6 +395,16 @@ class LanguageToolCommand(sublime_plugin.TextCommand):
             problem['regionKey'] = region_key
             self.view.add_regions(region_key, [region], highlight_scope, "",
                                   sublime.DRAW_OUTLINED)
+
+            # Create a phantom
+            problem['phantomKey'] = region_key
+
+            html = escape_html(problem['message'])
+            html = """
+                <div style="color: #ee6666; font-size: 11px; font-family: sans-serif;">{}</div>
+            """.format(html)
+
+            self.view.add_phantom(region_key, region, html, sublime.LAYOUT_BELOW)
 
 
         shifter = lambda problem: shift_offset(problem, check_region.a)
